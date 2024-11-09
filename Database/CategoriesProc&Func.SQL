@@ -13,9 +13,10 @@ RETURNS TABLE (CategoryId INT, Name VARCHAR)
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    RETURN QUERY SELECT CategoryId, Name FROM Categories;
+    RETURN QUERY SELECT c.CategoryId, c.Name FROM Categories c;
 END;
 $$;
+
 
 CREATE OR REPLACE PROCEDURE update_category(
     p_category_id INT,

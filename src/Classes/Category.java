@@ -8,27 +8,23 @@ import java.util.Scanner;
 
 public class Category {
 
-    // Função para adicionar uma nova categoria
+    // Adds a new category to the database
     public static void addCategory(Scanner scanner) {
         System.out.print("Enter category name: ");
         String name = scanner.nextLine();
 
-        // Criação dos parâmetros para a procedure
+        // Create parameters for the procedure
         List<SqlParameter> params = new ArrayList<>();
         params.add(new SqlParameter("p_name", SqlDbType.VARCHAR, name));
 
-        // Executa a procedure no banco de dados
+        // Execute the procedure in the database
         Queries.executeProcedure("add_category", params, 30);
-
-        if (Queries.getClassReturnMessage().equals("OK")) {
-            System.out.println("Category added successfully!");
-        } else {
-            System.out.println("Error adding category: " + Queries.getClassReturnMessage());
-        }
+        System.out.println(Queries.getClassReturnMessage().equals("OK") ? "Category added successfully!" : "Error adding category: " + Queries.getClassReturnMessage());
     }
 
-    // Função para exibir todas as categorias
+    // Displays all categories
     public static void viewCategories() {
+        // Fetch categories using procedure
         List<List<Object>> categories = Queries.fetchProcedureResults("view_categories", new ArrayList<>(), 30);
 
         if (categories.isEmpty()) {
@@ -42,7 +38,7 @@ public class Category {
         }
     }
 
-    // Função para atualizar uma categoria
+    // Updates an existing category
     public static void updateCategory(Scanner scanner) {
         System.out.print("Enter category ID to update: ");
         int categoryId = scanner.nextInt();
@@ -51,37 +47,27 @@ public class Category {
         System.out.print("Enter new category name: ");
         String name = scanner.nextLine();
 
-        // Criação dos parâmetros para a procedure
+        // Create parameters for the procedure
         List<SqlParameter> params = new ArrayList<>();
         params.add(new SqlParameter("p_category_id", SqlDbType.INTEGER, categoryId));
         params.add(new SqlParameter("p_name", SqlDbType.VARCHAR, name));
 
-        // Executa a procedure no banco de dados
+        // Execute the procedure in the database
         Queries.executeProcedure("update_category", params, 30);
-
-        if (Queries.getClassReturnMessage().equals("OK")) {
-            System.out.println("Category updated successfully!");
-        } else {
-            System.out.println("Error updating category: " + Queries.getClassReturnMessage());
-        }
+        System.out.println(Queries.getClassReturnMessage().equals("OK") ? "Category updated successfully!" : "Error updating category: " + Queries.getClassReturnMessage());
     }
 
-    // Função para deletar uma categoria
+    // Deletes a category from the database
     public static void deleteCategory(Scanner scanner) {
         System.out.print("Enter category ID to delete: ");
         int categoryId = scanner.nextInt();
 
-        // Criação dos parâmetros para a procedure
+        // Create parameters for the procedure
         List<SqlParameter> params = new ArrayList<>();
         params.add(new SqlParameter("p_category_id", SqlDbType.INTEGER, categoryId));
 
-        // Executa a procedure no banco de dados
+        // Execute the procedure in the database
         Queries.executeProcedure("delete_category", params, 30);
-
-        if (Queries.getClassReturnMessage().equals("OK")) {
-            System.out.println("Category deleted successfully!");
-        } else {
-            System.out.println("Error deleting category: " + Queries.getClassReturnMessage());
-        }
+        System.out.println(Queries.getClassReturnMessage().equals("OK") ? "Category deleted successfully!" : "Error deleting category: " + Queries.getClassReturnMessage());
     }
 }

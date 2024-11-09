@@ -15,7 +15,7 @@ public class Queries {
         return classReturnMessage;
     }
 
-    // Método de conexão
+    // Connects to the PostgreSQL database and returns the connection.
     public static Connection connect() {
         Connection conn = null;
         try {
@@ -27,125 +27,125 @@ public class Queries {
         return conn;
     }
 
-    // Método para executar uma procedure (insert, update, delete)
+    // Executes a stored procedure (for insert, update, or delete operations).
     public static void executeProcedure(String procedureName, List<SqlParameter> parameters, int timeout) {
         classReturnMessage = "OK";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            // Criar a chamada para a procedure usando a sintaxe CALL
-            StringBuilder sql = new StringBuilder("CALL " + procedureName + "(");
-            for (int i = 0; i < parameters.size(); i++) {
-                sql.append("?,");
-            }
-            if (parameters.size() > 0) {
-                sql.deleteCharAt(sql.length() - 1); // Remover última vírgula
-            }
-            sql.append(")");
+            // Building the Procedure call
+            String query = ProcedureCallBuilder(true, procedureName, parameters);
 
-            CallableStatement stmt = connection.prepareCall(sql.toString());
+            CallableStatement stmt = connection.prepareCall(query);
 
-            // Definindo os parâmetros de entrada
+            // Sets the input parameters in the CallableStatement.
             for (int i = 0; i < parameters.size(); i++) {
                 SqlParameter param = parameters.get(i);
                 stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType());
             }
 
-            stmt.setQueryTimeout(timeout); // Configurando o tempo limite
+            stmt.setQueryTimeout(timeout);
             stmt.execute();
         } catch (SQLException ex) {
             classReturnMessage = "An error occurred while trying to access the database. Details: " + ex.getMessage();
-            ex.printStackTrace();
         }
     }
 
-    // Método para executar uma function (exclusivo para consulta de dados)
-    public static List<List<Object>> fetchFunctionResults(String functionName, List<SqlParameter> parameters, int timeout) {
+    // Executes a stored procedure and retrieves the results as a list of lists.
+    public static List<List<Object>> fetchProcedureResults(String procedureName, List<SqlParameter> parameters, int timeout) {
+        classReturnMessage = "OK";
         List<List<Object>> results = new ArrayList<>();
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            // Criar a chamada para a function
-            StringBuilder query = new StringBuilder("SELECT * FROM " + functionName + "(");
-            for (int i = 0; i < parameters.size(); i++) {
-                query.append("?,");
-            }
-            if (parameters.size() > 0) {
-                query.deleteCharAt(query.length() - 1); // Remover última vírgula
-            }
-            query.append(")");
+            // Building the Procedure call
+            String query = ProcedureCallBuilder(true, procedureName, parameters);
 
-            CallableStatement stmt = connection.prepareCall(query.toString());
+            CallableStatement stmt = connection.prepareCall(query);
 
-            // Definindo os parâmetros de entrada
+            // Sets the input parameters in the CallableStatement.
             for (int i = 0; i < parameters.size(); i++) {
                 SqlParameter param = parameters.get(i);
                 stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType());
             }
 
-            stmt.setQueryTimeout(timeout); // Configurando o tempo limite
+            stmt.setQueryTimeout(timeout);
 
-            // Executando a function
+            // Executes the stored procedure and retrieves the result set.
             ResultSet rs = stmt.executeQuery();
 
-            // Processando os resultados
+            // Processes the result set row by row.
             while (rs.next()) {
                 List<Object> row = new ArrayList<>();
                 int columnCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= columnCount; i++) {
+
+                // Adds each column value to the current row.
+                for (int i = 1; i <= columnCount; i++)
                     row.add(rs.getObject(i));
-                }
+
+                results.add(row);
+            }
+            rs.close();
+        } catch (SQLException ex) {
+            classReturnMessage = "Error fetching function results: " + ex.getMessage();
+        }
+
+        return results;
+    }
+
+    // Executes a function and retrieves the results as a list of lists (for data retrieval only).
+    public static List<List<Object>> fetchFunctionResults(String functionName, List<SqlParameter> parameters, int timeout) {
+        classReturnMessage = "OK";
+        List<List<Object>> results = new ArrayList<>();
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            // Building the Function call
+            String query = ProcedureCallBuilder(false, functionName, parameters);
+
+            CallableStatement stmt = connection.prepareCall(query);
+
+            // Sets the input parameters in the CallableStatement.
+            for (int i = 0; i < parameters.size(); i++) {
+                SqlParameter param = parameters.get(i);
+                stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType());
+            }
+
+            stmt.setQueryTimeout(timeout);
+            ResultSet rs = stmt.executeQuery();
+
+            // Processes the result set row by row.
+            while (rs.next()) {
+                List<Object> row = new ArrayList<>();
+                int columnCount = rs.getMetaData().getColumnCount();
+
+                // Adds each column value to the current row.
+                for (int i = 1; i <= columnCount; i++)
+                    row.add(rs.getObject(i));
+
                 results.add(row);
             }
 
             rs.close();
         } catch (SQLException ex) {
             classReturnMessage = "Error fetching function results: " + ex.getMessage();
-            ex.printStackTrace();
         }
 
         return results;
     }
 
-    public static List<List<Object>> fetchProcedureResults(String procedureName, List<SqlParameter> parameters, int timeout) {
-        List<List<Object>> results = new ArrayList<>();
+    // Builds the SQL call statement for either a stored procedure or function, including parameters.
+    private static String ProcedureCallBuilder(boolean procedure, String name, List<SqlParameter> parameters) {
+        StringBuilder query = procedure ? new StringBuilder("{CALL " + name + "(") : new StringBuilder("SELECT * FROM " + name + "(");
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            // Criando a chamada para a procedure
-            StringBuilder query = new StringBuilder("{CALL " + procedureName + "(");
-            for (int i = 0; i < parameters.size(); i++) {
-                query.append("?,");
-            }
-            if (parameters.size() > 0) {
-                query.deleteCharAt(query.length() - 1); // Remover a última vírgula
-            }
-            query.append(")}");
+        // Appends placeholders for each parameter.
+        for (int i = 0; i < parameters.size(); i++)
+            query.append("?,");
 
-            CallableStatement stmt = connection.prepareCall(query.toString());
+        // Removes the trailing comma if parameters are present.
+        if (parameters.size() > 0)
+            query.deleteCharAt(query.length() - 1);
 
-            // Definindo os parâmetros de entrada
-            for (int i = 0; i < parameters.size(); i++) {
-                SqlParameter param = parameters.get(i);
-                stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType());
-            }
+        // Closes the call statement.
+        query.append(procedure ? ")}" : ")");
 
-            stmt.setQueryTimeout(timeout); // Configurando o tempo limite
-
-            // Executando a procedure
-            ResultSet rs = stmt.executeQuery();  // Aqui você executaria a procedure que retorna resultados
-
-            // Processando os resultados
-            while (rs.next()) {
-                List<Object> row = new ArrayList<>();
-                int columnCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= columnCount; i++) {
-                    row.add(rs.getObject(i));
-                }
-                results.add(row);
-            }
-            rs.close();
-        } catch (SQLException ex) {
-            System.out.println("Error fetching procedure results: " + ex.getMessage());
-        }
-
-        return results;
+        return query.toString();
     }
 }
