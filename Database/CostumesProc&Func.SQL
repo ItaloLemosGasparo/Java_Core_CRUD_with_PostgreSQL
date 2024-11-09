@@ -1,31 +1,48 @@
--- Inserir Cliente
-CREATE OR REPLACE PROCEDURE insert_customer(cust_name VARCHAR, cust_phone VARCHAR, cust_email VARCHAR)
-LANGUAGE plpgsql AS $$
+CREATE OR REPLACE PROCEDURE add_customer(
+    p_name VARCHAR,
+    p_phone VARCHAR,
+    p_email VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
 BEGIN
-    INSERT INTO Customers (Name, Phone, Email) VALUES (cust_name, cust_phone, cust_email);
+    INSERT INTO Customers (Name, Phone, Email)
+    VALUES (p_name, p_phone, p_email);
 END;
 $$;
 
--- Listar Clientes
-CREATE OR REPLACE FUNCTION get_customers()
-RETURNS TABLE (CustomerId INT, Name VARCHAR, Phone VARCHAR, Email VARCHAR) LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION view_customers()
+RETURNS TABLE (CustomerId INT, Name VARCHAR, Phone VARCHAR, Email VARCHAR)
+LANGUAGE plpgsql
+AS $$
 BEGIN
-    RETURN QUERY SELECT * FROM Customers;
+    RETURN QUERY SELECT c.CustomerId, c.Name, c.Phone, c.Email FROM Customers c;
 END;
 $$;
 
--- Atualizar Cliente
-CREATE OR REPLACE PROCEDURE update_customer(cust_id INT, new_name VARCHAR, new_phone VARCHAR, new_email VARCHAR)
-LANGUAGE plpgsql AS $$
+CREATE OR REPLACE PROCEDURE update_customer(
+    p_customer_id INT,
+    p_name VARCHAR,
+    p_phone VARCHAR,
+    p_email VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
 BEGIN
-    UPDATE Customers SET Name = new_name, Phone = new_phone, Email = new_email WHERE CustomerId = cust_id;
+    UPDATE Customers
+    SET Name = p_name,
+        Phone = p_phone,
+        Email = p_email
+    WHERE CustomerId = p_customer_id;
 END;
 $$;
 
--- Deletar Cliente
-CREATE OR REPLACE PROCEDURE delete_customer(cust_id INT)
-LANGUAGE plpgsql AS $$
+CREATE OR REPLACE PROCEDURE delete_customer(
+    p_customer_id INT
+)
+LANGUAGE plpgsql
+AS $$
 BEGIN
-    DELETE FROM Customers WHERE CustomerId = cust_id;
+    DELETE FROM Customers WHERE CustomerId = p_customer_id;
 END;
 $$;
