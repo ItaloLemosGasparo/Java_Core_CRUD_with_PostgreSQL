@@ -8,144 +8,91 @@ public class Queries {
     private static final String URL = "jdbc:postgresql://kesavan.db.elephantsql.com/khcnvpuu";
     private static final String USER = "khcnvpuu";
     private static final String PASSWORD = "1wtYbwBs5b_vG71JYo6dS2jBBQDvhu9t";
-
     public static String classReturnMessage;
 
+    // Retrieves the last returned message (success or error)
     public static String getClassReturnMessage() {
         return classReturnMessage;
     }
 
-    // Connects to the PostgreSQL database and returns the connection.
-    public static Connection connect() {
-        Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println("Connected to the PostgreSQL server successfully.");
-        } catch (SQLException e) {
-            System.out.println("Connection error: " + e.getMessage());
-        }
-        return conn;
+    // Establishes a connection to the PostgreSQL database
+    private static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
-    // Executes a stored procedure (for insert, update, or delete operations).
+    // Executes a stored procedure that modifies the database (e.g., insert, update, delete)
     public static void executeProcedure(String procedureName, List<SqlParameter> parameters, int timeout) {
         classReturnMessage = "OK";
+        String sql = buildProcedureSql(procedureName, parameters);
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            // Building the Procedure call
-            String query = ProcedureCallBuilder(true, procedureName, parameters);
+        try (Connection connection = getConnection();
+             CallableStatement stmt = connection.prepareCall(sql)) {
 
-            CallableStatement stmt = connection.prepareCall(query);
-
-            // Sets the input parameters in the CallableStatement.
-            for (int i = 0; i < parameters.size(); i++) {
-                SqlParameter param = parameters.get(i);
-                stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType());
-            }
-
-            stmt.setQueryTimeout(timeout);
-            stmt.execute();
+            setParameters(stmt, parameters);
+            stmt.setQueryTimeout(timeout); // Set query timeout
+            stmt.execute(); // Execute the procedure
         } catch (SQLException ex) {
             classReturnMessage = "An error occurred while trying to access the database. Details: " + ex.getMessage();
         }
     }
 
-    // Executes a stored procedure and retrieves the results as a list of lists.
-    public static List<List<Object>> fetchProcedureResults(String procedureName, List<SqlParameter> parameters, int timeout) {
-        classReturnMessage = "OK";
-        List<List<Object>> results = new ArrayList<>();
-
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            // Building the Procedure call
-            String query = ProcedureCallBuilder(true, procedureName, parameters);
-
-            CallableStatement stmt = connection.prepareCall(query);
-
-            // Sets the input parameters in the CallableStatement.
-            for (int i = 0; i < parameters.size(); i++) {
-                SqlParameter param = parameters.get(i);
-                stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType());
-            }
-
-            stmt.setQueryTimeout(timeout);
-
-            // Executes the stored procedure and retrieves the result set.
-            ResultSet rs = stmt.executeQuery();
-
-            // Processes the result set row by row.
-            while (rs.next()) {
-                List<Object> row = new ArrayList<>();
-                int columnCount = rs.getMetaData().getColumnCount();
-
-                // Adds each column value to the current row.
-                for (int i = 1; i <= columnCount; i++)
-                    row.add(rs.getObject(i));
-
-                results.add(row);
-            }
-            rs.close();
-        } catch (SQLException ex) {
-            classReturnMessage = "Error fetching function results: " + ex.getMessage();
-        }
-
-        return results;
-    }
-
-    // Executes a function and retrieves the results as a list of lists (for data retrieval only).
+    // Executes a function to retrieve data from the database
     public static List<List<Object>> fetchFunctionResults(String functionName, List<SqlParameter> parameters, int timeout) {
-        classReturnMessage = "OK";
+        return fetchResults("SELECT * FROM " + functionName, parameters, timeout);
+    }
+
+    // Executes a stored procedure that returns results (e.g., for data retrieval)
+    public static List<List<Object>> fetchProcedureResults(String procedureName, List<SqlParameter> parameters, int timeout) {
+        return fetchResults("{CALL " + procedureName, parameters, timeout);
+    }
+
+    // Common method to execute either functions or procedures and fetch results
+    private static List<List<Object>> fetchResults(String baseQuery, List<SqlParameter> parameters, int timeout) {
         List<List<Object>> results = new ArrayList<>();
+        String sql = buildProcedureSql(baseQuery, parameters);
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            // Building the Function call
-            String query = ProcedureCallBuilder(false, functionName, parameters);
+        try (Connection connection = getConnection();
+             CallableStatement stmt = connection.prepareCall(sql)) {
 
-            CallableStatement stmt = connection.prepareCall(query);
+            setParameters(stmt, parameters); // Set the parameters for the statement
+            stmt.setQueryTimeout(timeout); // Set query timeout
 
-            // Sets the input parameters in the CallableStatement.
-            for (int i = 0; i < parameters.size(); i++) {
-                SqlParameter param = parameters.get(i);
-                stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType());
+            try (ResultSet rs = stmt.executeQuery()) {
+                // Process the results from the query
+                while (rs.next()) {
+                    List<Object> row = new ArrayList<>();
+
+                    int columnCount = rs.getMetaData().getColumnCount();
+                    for (int i = 1; i <= columnCount; i++)
+                        row.add(rs.getObject(i)); // Collect each column value
+
+                    results.add(row);
+                }
             }
-
-            stmt.setQueryTimeout(timeout);
-            ResultSet rs = stmt.executeQuery();
-
-            // Processes the result set row by row.
-            while (rs.next()) {
-                List<Object> row = new ArrayList<>();
-                int columnCount = rs.getMetaData().getColumnCount();
-
-                // Adds each column value to the current row.
-                for (int i = 1; i <= columnCount; i++)
-                    row.add(rs.getObject(i));
-
-                results.add(row);
-            }
-
-            rs.close();
         } catch (SQLException ex) {
-            classReturnMessage = "Error fetching function results: " + ex.getMessage();
+            classReturnMessage = "Error fetching results: " + ex.getMessage();
         }
 
         return results;
     }
 
-    // Builds the SQL call statement for either a stored procedure or function, including parameters.
-    private static String ProcedureCallBuilder(boolean procedure, String name, List<SqlParameter> parameters) {
-        StringBuilder query = procedure ? new StringBuilder("{CALL " + name + "(") : new StringBuilder("SELECT * FROM " + name + "(");
+    // Helper method to construct the SQL query string for stored procedures or functions
+    private static String buildProcedureSql(String baseQuery, List<SqlParameter> parameters) {
+        StringBuilder sql = new StringBuilder(baseQuery + "(");
+        sql.append("?,".repeat(parameters.size())); // Add placeholders for each parameter
 
-        // Appends placeholders for each parameter.
-        for (int i = 0; i < parameters.size(); i++)
-            query.append("?,");
+        if (!parameters.isEmpty())
+            sql.deleteCharAt(sql.length() - 1); // Remove the last comma
 
-        // Removes the trailing comma if parameters are present.
-        if (parameters.size() > 0)
-            query.deleteCharAt(query.length() - 1);
+        sql.append(")");
+        return sql.toString();
+    }
 
-        // Closes the call statement.
-        query.append(procedure ? ")}" : ")");
-
-        return query.toString();
+    // Helper method to set the parameters for a CallableStatement
+    private static void setParameters(CallableStatement stmt, List<SqlParameter> parameters) throws SQLException {
+        for (int i = 0; i < parameters.size(); i++) {
+            SqlParameter param = parameters.get(i);
+            stmt.setObject(i + 1, param.getValue(), param.getSqlDbType().getJdbcType()); // Set each parameter value
+        }
     }
 }
