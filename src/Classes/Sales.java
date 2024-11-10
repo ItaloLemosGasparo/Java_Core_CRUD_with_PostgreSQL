@@ -25,12 +25,7 @@ public class Sales {
 
         // Execute the procedure in the database
         Queries.executeProcedure("add_sale", params, 30);
-
-        if (Queries.getClassReturnMessage().equals("OK")) {
-            System.out.println("Sale added successfully!");
-        } else {
-            System.out.println("Error adding sale: " + Queries.getClassReturnMessage());
-        }
+        System.out.println(Queries.getClassReturnMessage().equals("OK") ? "Sale added successfully!" : "Error adding sale: " + Queries.getClassReturnMessage());
     }
 
     // Adds an item to an existing sale in the database
@@ -56,12 +51,7 @@ public class Sales {
 
         // Execute the procedure in the database
         Queries.executeProcedure("add_sale_item", params, 30);
-
-        if (Queries.getClassReturnMessage().equals("OK")) {
-            System.out.println("Sale item added successfully!");
-        } else {
-            System.out.println("Error adding sale item: " + Queries.getClassReturnMessage());
-        }
+        System.out.println(Queries.getClassReturnMessage().equals("OK") ? "Sale item added successfully!" : "Error adding sale item: " + Queries.getClassReturnMessage());
     }
 
     // Displays all sales records from the database
@@ -112,11 +102,6 @@ public class Sales {
 
         // Execute the procedure in the database
         Queries.executeProcedure("delete_sale", params, 30);
-
-        if (Queries.getClassReturnMessage().equals("OK")) {
-            System.out.println("Sale deleted successfully!");
-        } else {
-            System.out.println("Error deleting sale: " + Queries.getClassReturnMessage());
-        }
+        System.out.println(Queries.getClassReturnMessage().equals("OK") ? "Sale deleted successfully!" : "Error deleting sale: " + Queries.getClassReturnMessage());
     }
 }
