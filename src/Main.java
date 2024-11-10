@@ -1,6 +1,4 @@
-import Classes.Category;
-import Classes.Product;
-import Classes.Customer;
+import Classes.*;
 
 import java.util.Scanner;
 
@@ -190,13 +188,13 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    //Sale.addSale(scanner);
+                    Sales.addSale(scanner);
                     break;
                 case 2:
-                    //Sale.viewSales();
+                    Sales.viewSales();
                     break;
                 case 3:
-                    //Sale.viewSaleItems(scanner);
+                    Sales.viewSaleItems(scanner);
                     break;
                 case 0:
                     exit = true;
