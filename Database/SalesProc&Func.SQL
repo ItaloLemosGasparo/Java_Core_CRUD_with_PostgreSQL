@@ -1,23 +1,56 @@
--- Inserir Venda
-CREATE OR REPLACE PROCEDURE insert_sale(cust_id INT, total_val DECIMAL)
-LANGUAGE plpgsql AS $$
+CREATE OR REPLACE PROCEDURE add_sale(
+    p_customer_id INT,
+    p_total_value DECIMAL
+)
+LANGUAGE plpgsql
+AS $$
 BEGIN
-    INSERT INTO Sales (CustomerId, Total_Value) VALUES (cust_id, total_val);
+    INSERT INTO Sales (CustomerId, Total_Value)
+    VALUES (p_customer_id, p_total_value);
 END;
 $$;
 
--- Listar Vendas
-CREATE OR REPLACE FUNCTION get_sales()
-RETURNS TABLE (SaleId INT, Sale_Date TIMESTAMP, CustomerId INT, Total_Value DECIMAL) LANGUAGE plpgsql AS $$
+CREATE OR REPLACE PROCEDURE add_sale_item(
+    p_sale_id INT,
+    p_product_id INT,
+    p_quantity INT,
+    p_unit_price DECIMAL
+)
+LANGUAGE plpgsql
+AS $$
 BEGIN
-    RETURN QUERY SELECT * FROM Sales;
+    INSERT INTO Sale_Items (SaleId, ProductId, Quantity, Unit_Price)
+    VALUES (p_sale_id, p_product_id, p_quantity, p_unit_price);
 END;
 $$;
 
--- Deletar Venda
-CREATE OR REPLACE PROCEDURE delete_sale(sale_id INT)
-LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION view_sales()
+RETURNS TABLE (SaleId INT, Sale_Date TIMESTAMP, CustomerId INT, Total_Value DECIMAL)
+LANGUAGE plpgsql
+AS $$
 BEGIN
-    DELETE FROM Sales WHERE SaleId = sale_id;
+    RETURN QUERY SELECT s.SaleId, s.Sale_Date, s.CustomerId, s.Total_Value FROM Sales s;
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE delete_sale(
+    p_sale_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM Sale_Items WHERE SaleId = p_sale_id;
+    DELETE FROM Sales WHERE SaleId = p_sale_id;
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE delete_sale(
+    p_sale_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM Sale_Items WHERE SaleId = p_sale_id;
+    DELETE FROM Sales WHERE SaleId = p_sale_id;
 END;
 $$;
