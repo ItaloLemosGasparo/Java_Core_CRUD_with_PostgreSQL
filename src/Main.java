@@ -9,7 +9,6 @@ public class Main {
         boolean exit = false;
 
         while (!exit) {
-            clearScreen();
             System.out.println("\n--- Mercadinho System ---");
             System.out.println("1. Categories");
             System.out.println("2. Products");
@@ -44,21 +43,6 @@ public class Main {
         }
 
         scanner.close();
-    }
-
-    private static void clearScreen() {
-        try {
-            String operatingSystem = System.getProperty("os.name");
-
-            if (operatingSystem.contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                System.out.print("\033[H\033[2J");
-                System.out.flush();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     // Menu for Categories

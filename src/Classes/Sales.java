@@ -1,8 +1,6 @@
 package Classes;
 
-import Globals.SqlParameter;
-import Globals.SqlDbType;
-import Globals.Queries;
+import Globals.*;
 
 import java.util.ArrayList;
 import java.util.List;
