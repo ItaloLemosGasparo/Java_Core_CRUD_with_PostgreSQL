@@ -1,8 +1,7 @@
 # Java Core CRUD with PostgreSQL
 
 This project is a simple **Java CRUD application** that interacts with a **PostgreSQL** database. The application allows
-you to perform basic operations (Create, Read, Update, and Delete) on four entities: **Categories**, **Products**, *
-*Customers**, and **Sales**.
+you to perform basic operations (Create, Read, Update, and Delete) on four entities: **Categories**, **Products**, **Customers**, and **Sales**.
 
 The database was built using **PostgreSQL** and is hosted on **ElephantSQL**, a free online PostgreSQL service, to make
 it easily accessible.
