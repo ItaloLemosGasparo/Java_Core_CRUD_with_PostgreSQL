@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Queries {
-    private static final String URL = "jdbc:postgresql://kesavan.db.elephantsql.com/khcnvpuu";
-    private static final String USER = "khcnvpuu";
-    private static final String PASSWORD = "1wtYbwBs5b_vG71JYo6dS2jBBQDvhu9t";
+    private static final String URL = "";
+    private static final String USER = "";
+    private static final String PASSWORD = "";
 
     public static String classReturnMessage;
 
