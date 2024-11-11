@@ -1,4 +1,4 @@
-# Java CRUD with PostgreSQL
+# Java Core CRUD with PostgreSQL
 
 This project is a simple **Java CRUD application** that interacts with a **PostgreSQL** database. The application allows
 you to perform basic operations (Create, Read, Update, and Delete) on four entities: **Categories**, **Products**, *
